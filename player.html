@@ -3,54 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Live Player</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.css" />
+  <title>Esports Player</title>
+  <script src="https://cdn.jwplayer.com/libraries/YourJWPlayerLibraryID.js"></script>
   <style>
-    body { margin: 0; background: black; display: flex; flex-direction: column; height: 100vh; }
-    #player { flex-grow: 1; }
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      background-color: #121212; 
+      color: white; 
+      margin: 0;
+      padding: 20px;
+    }
     .back-btn {
       background: #ff3c3c;
       color: white;
       border: none;
       padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      margin: 10px;
       border-radius: 5px;
-      width: max-content;
-      align-self: flex-start;
-      text-decoration: none;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    #playerContainer {
+      width: 100%;
+      height: 80vh;
+      max-width: 1200px;
+      margin: 0 auto;
     }
   </style>
 </head>
 <body>
-  <a href="index.html" class="back-btn">← Back to Channels</a>
-  <div id="player"></div>
+  <button onclick="window.history.back()" class="back-btn">&larr; Back</button>
+  <div id="playerContainer"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
   <script>
-    // URL থেকে stream প্যারামিটার নিয়ে প্লেয়ার সেটআপ
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    }
+    // URL থেকে স্ট্রিম প্যারামিটার পড়ুন
+    const urlParams = new URLSearchParams(window.location.search);
+    const streamUrl = urlParams.get('stream');
 
-    const streamUrl = getQueryParam('stream');
-
-    if (!streamUrl) {
-      document.getElementById('player').innerHTML = '<p style="color:white; text-align:center; margin-top:20px;">No stream URL provided.</p>';
-    } else {
-      const player = new Clappr.Player({
-        source: decodeURIComponent(streamUrl),
-        parentId: '#player',
+    // JW Player কনফিগারেশন
+    if(streamUrl) {
+      const player = jwplayer('playerContainer').setup({
+        file: decodeURIComponent(streamUrl),
         width: '100%',
         height: '100%',
-        autoPlay: true,
+        autostart: true,
         mute: false,
-        mediacontrol: { seekbar: "#seekbar" },
-        watermark: 'https://cdn.shopify.com/s/files/1/0684/1643/8455/files/esports.webp?v=1743971634',
-        watermarkLink: 'https://t.me/esportspk01'
+        primary: 'html5',
+        hlshtml: true,
+        advertising: {
+          client: 'vast',
+          tag: 'YOUR_AD_TAG_URL' // আপনার VAST ট্যাগ এখানে যোগ করুন
+        }
       });
+    } else {
+      document.getElementById('playerContainer').innerHTML = '<p class="text-danger">Error: No stream URL provided</p>';
     }
   </script>
 </body>
