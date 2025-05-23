@@ -2,38 +2,160 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Player</title>
-  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RS Live TV Player</title>
+  
+  <script src="https://cdn.jwplayer.com/libraries/YOUR_JWPLAYER_LICENSE_KEY.js"></script>
   <style>
-    body { margin: 0; background-color: #000; color: white; }
-    .video-container { position: relative; height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .vjs-watermark { position: absolute; top: 10px; left: 10px; z-index: 10; }
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      background-color: #000;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex; flex-direction: column;
+    }
+    header {
+      background: #ff3c3c;
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+      user-select: none;
+    }
+    #player-container {
+      flex-grow: 1;
+      position: relative;
+    }
+    #player {
+      width: 100%;
+      height: 100%;
+      background: black;
+    }
+    footer {
+      background: #222;
+      padding: 8px 20px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #bbb;
+      user-select: none;
+    }
+    /* Custom button styles */
+    .control-btn {
+      background: #ff3c3c;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      margin: 0 6px;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    .control-btn:hover {
+      background: #e02b2b;
+    }
+    .controls {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      z-index: 9999;
+      background: rgba(0,0,0,0.4);
+      border-radius: 30px;
+      padding: 6px 12px;
+    }
   </style>
 </head>
 <body>
-  <div class="video-container">
-    <video id="livePlayer" class="video-js vjs-default-skin" controls autoplay playsinline width="100%" height="100%">
-      <source src="" type="application/x-mpegURL" />
-      Your browser does not support HTML5 video.
-    </video>
+  <header id="streamTitle">Loading Stream...</header>
+
+  <div id="player-container">
+    <div id="player">Loading player...</div>
+    <div class="controls">
+      <button class="control-btn" id="btnPlayPause">Pause</button>
+      <button class="control-btn" id="btnMuteUnmute">Mute</button>
+      <button class="control-btn" id="btnFullscreen">Fullscreen</button>
+    </div>
   </div>
 
-  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+  <footer>&copy; 2025 Rs Live Tv. All rights reserved.</footer>
+
   <script>
+    // JW Player setup & controls
+
     function getStreamUrl() {
       const params = new URLSearchParams(window.location.search);
       return params.get('stream');
     }
-
-    const player = videojs('livePlayer');
-    const streamUrl = getStreamUrl();
-
-    if (streamUrl) {
-      player.src({ src: streamUrl, type: 'application/x-mpegURL' });
-    } else {
-      alert("No stream URL provided.");
+    function getStreamName() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('name') || "Live Stream";
     }
+
+    const streamUrl = getStreamUrl();
+    const streamName = getStreamName();
+
+    const player = jwplayer("player");
+
+    if (!streamUrl) {
+      document.getElementById("player").innerHTML = "No stream URL provided.";
+    } else {
+      document.getElementById("streamTitle").textContent = streamName;
+
+      player.setup({
+        file: streamUrl,
+        width: "100%",
+        height: "100%",
+        autostart: true,
+        controls: true,
+        mute: false,
+        stretching: "uniform",
+        abouttext: "Rs Live TV",
+        aboutlink: "https://t.me/rslivetv",
+        logo: {
+          file: "https://i.postimg.cc/CxwVHY40/20250415-163330.png",
+          link: "https://t.me/rslivetv",
+          position: "top-left"
+        }
+      });
+    }
+
+    // Controls buttons
+    const btnPlayPause = document.getElementById('btnPlayPause');
+    const btnMuteUnmute = document.getElementById('btnMuteUnmute');
+    const btnFullscreen = document.getElementById('btnFullscreen');
+
+    btnPlayPause.addEventListener('click', () => {
+      const state = player.getState();
+      if(state === 'playing') {
+        player.pause();
+        btnPlayPause.textContent = 'Play';
+      } else {
+        player.play();
+        btnPlayPause.textContent = 'Pause';
+      }
+    });
+
+    btnMuteUnmute.addEventListener('click', () => {
+      if(player.getMute()) {
+        player.setMute(false);
+        btnMuteUnmute.textContent = 'Mute';
+      } else {
+        player.setMute(true);
+        btnMuteUnmute.textContent = 'Unmute';
+      }
+    });
+
+    btnFullscreen.addEventListener('click', () => {
+      player.setFullscreen(!player.getFullscreen());
+    });
+
+    // Update play/pause button on player events
+    player.on('play', () => btnPlayPause.textContent = 'Pause');
+    player.on('pause', () => btnPlayPause.textContent = 'Play');
+
   </script>
 </body>
 </html>
