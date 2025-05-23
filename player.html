@@ -2,100 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Playlist Player - Rs Live TV</title>
-  <link rel="shortcut icon" href="https://cdn.shopify.com/s/files/1/0684/1643/8455/files/esports.webp?v=1743971634">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Player</title>
+  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
   <style>
-    body {
-      margin: 0;
-      background-color: #000;
-      color: white;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    .top-bar {
-      background-color: #ff3c3c;
-      padding: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .top-bar select {
-      padding: 6px;
-      border-radius: 6px;
-      border: none;
-    }
-    .top-bar button {
-      padding: 6px 12px;
-      background: white;
-      border: none;
-      color: #ff3c3c;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-      background-color: black;
-    }
+    body { margin: 0; background-color: #000; color: white; }
+    .video-container { position: relative; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .vjs-watermark { position: absolute; top: 10px; left: 10px; z-index: 10; }
   </style>
 </head>
 <body>
-
-  <div class="top-bar">
-    <button onclick="history.back()">← Back</button>
-    <select id="channelSelect"></select>
-    <div>RS LIVE TV</div>
+  <div class="video-container">
+    <video id="livePlayer" class="video-js vjs-default-skin" controls autoplay playsinline width="100%" height="100%">
+      <source src="" type="application/x-mpegURL" />
+      Your browser does not support HTML5 video.
+    </video>
   </div>
 
-  <video id="video" controls autoplay playsinline></video>
-
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
   <script>
-    const jsonUrl = 'https://raw.githubusercontent.com/abusaeeidx/CricHd-playlists-Auto-Update-permanent/main/api.json';
-    const video = document.getElementById('video');
-    const channelSelect = document.getElementById('channelSelect');
-
-    function playStream(url) {
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-      } else {
-        alert('Your browser does not support HLS.');
-      }
+    function getStreamUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('stream');
     }
 
-    fetch(jsonUrl)
-      .then(res => res.json())
-      .then(data => {
-        data.forEach((channel, index) => {
-          const option = document.createElement('option');
-          option.value = channel.url;
-          option.textContent = channel.name;
-          channelSelect.appendChild(option);
-        });
+    const player = videojs('livePlayer');
+    const streamUrl = getStreamUrl();
 
-        // Auto-play the first channel
-        if (data.length > 0) {
-          playStream(data[0].url);
-          channelSelect.selectedIndex = 0;
-        }
-      })
-      .catch(err => {
-        alert("Failed to load playlist.");
-        console.error(err);
-      });
-
-    channelSelect.addEventListener('change', (e) => {
-      playStream(e.target.value);
-    });
+    if (streamUrl) {
+      player.src({ src: streamUrl, type: 'application/x-mpegURL' });
+    } else {
+      alert("No stream URL provided.");
+    }
   </script>
-
 </body>
 </html>
