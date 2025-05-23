@@ -3,56 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Player</title>
-  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  <title>Playlist Player - Rs Live TV</title>
+  <link rel="shortcut icon" href="https://cdn.shopify.com/s/files/1/0684/1643/8455/files/esports.webp?v=1743971634">
   <style>
-    body { margin: 0; background: #000; color: #fff; font-family: Arial, sans-serif; }
-    .video-container { width: 100%; height: 100vh; display: flex; justify-content: center; align-items: center; }
-    .video-js { width: 100%; height: 100%; max-height: 100vh; }
-    .back-btn {
-      position: absolute; top: 15px; left: 15px;
-      background: #ff3c3c; color: #fff; padding: 8px 12px;
-      border-radius: 5px; text-decoration: none; font-weight: bold;
-      z-index: 999;
+    body {
+      margin: 0;
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
-    .watermark {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      opacity: 0.7;
-      z-index: 99;
+    .top-bar {
+      background-color: #ff3c3c;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .watermark img {
-      height: 40px;
+    .top-bar select {
+      padding: 6px;
+      border-radius: 6px;
+      border: none;
+    }
+    .top-bar button {
+      padding: 6px 12px;
+      background: white;
+      border: none;
+      color: #ff3c3c;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      background-color: black;
     }
   </style>
 </head>
 <body>
-  <a class="back-btn" href="index.html">&larr; Back</a>
-  <div class="watermark">
-    <img src="https://i.postimg.cc/CxwVHY40/20250415-163330.png" alt="Watermark" />
-  </div>
-  <div class="video-container">
-    <video id="livePlayer" class="video-js vjs-default-skin" controls autoplay playsinline></video>
+
+  <div class="top-bar">
+    <button onclick="history.back()">← Back</button>
+    <select id="channelSelect"></select>
+    <div>RS LIVE TV</div>
   </div>
 
-  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+  <video id="video" controls autoplay playsinline></video>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const streamUrl = urlParams.get('stream');
+    const jsonUrl = 'https://raw.githubusercontent.com/abusaeeidx/CricHd-playlists-Auto-Update-permanent/main/api.json';
+    const video = document.getElementById('video');
+    const channelSelect = document.getElementById('channelSelect');
 
-    if (!streamUrl) {
-      alert('No stream URL provided');
-    } else {
-      const player = videojs('livePlayer', {
-        sources: [{
-          src: streamUrl,
-          type: 'application/x-mpegURL'
-        }],
-        techOrder: ['html5'],
-        liveui: true
-      });
+    function playStream(url) {
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+      } else {
+        alert('Your browser does not support HLS.');
+      }
     }
+
+    fetch(jsonUrl)
+      .then(res => res.json())
+      .then(data => {
+        data.forEach((channel, index) => {
+          const option = document.createElement('option');
+          option.value = channel.url;
+          option.textContent = channel.name;
+          channelSelect.appendChild(option);
+        });
+
+        // Auto-play the first channel
+        if (data.length > 0) {
+          playStream(data[0].url);
+          channelSelect.selectedIndex = 0;
+        }
+      })
+      .catch(err => {
+        alert("Failed to load playlist.");
+        console.error(err);
+      });
+
+    channelSelect.addEventListener('change', (e) => {
+      playStream(e.target.value);
+    });
   </script>
+
 </body>
 </html>
